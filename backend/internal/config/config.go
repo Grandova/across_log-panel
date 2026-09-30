@@ -1,7 +1,10 @@
 package config
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,9 +17,10 @@ import (
 )
 
 var (
-	globalConfig *model.AppConfig
-	configMutex  sync.RWMutex
-	configPath   = filepath.Join("data", "config.json")
+	globalConfig          *model.AppConfig
+	configMutex           sync.RWMutex
+	configPath            = filepath.Join("data", "config.json")
+	ErrInvalidCredentials = errors.New("当前账号或密码不正确")
 )
 
 // InitConfig loads configuration from .env and data/config.json
@@ -29,12 +33,8 @@ func InitConfig() (*model.AppConfig, error) {
 	_ = godotenv.Load("../.env")
 
 	// 2. Default Config
-	defaultHash, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
 	cfg := &model.AppConfig{
-		Port:          8080,
-		JWTSecret:     "access-log-analytics-secret-key-2026",
-		AdminUser:     "admin",
-		AdminPassHash: string(defaultHash),
+		Port: 8080,
 		ClickHouse: model.ClickHouseConfig{
 			Protocol: "http",
 			Host:     "127.0.0.1",
@@ -60,9 +60,10 @@ func InitConfig() (*model.AppConfig, error) {
 	}
 	if p := os.Getenv("ADMIN_PASSWORD"); p != "" {
 		h, err := bcrypt.GenerateFromPassword([]byte(p), bcrypt.DefaultCost)
-		if err == nil {
-			cfg.AdminPassHash = string(h)
+		if err != nil {
+			return nil, fmt.Errorf("管理员初始密码无效: %w", err)
 		}
+		cfg.AdminPassHash = string(h)
 	}
 
 	if proto := os.Getenv("CLICKHOUSE_PROTOCOL"); proto != "" {
@@ -89,23 +90,40 @@ func InitConfig() (*model.AppConfig, error) {
 		cfg.ClickHouse.Secure = true
 	}
 
-	// 3. If data/config.json exists, load overrides
-	if err := os.MkdirAll("data", 0755); err == nil {
-		if fileData, err := os.ReadFile(configPath); err == nil {
-			var savedCfg model.AppConfig
-			if err := json.Unmarshal(fileData, &savedCfg); err == nil {
-				// Merge saved ClickHouse config
-				if savedCfg.ClickHouse.Host != "" {
-					cfg.ClickHouse = savedCfg.ClickHouse
-				}
-				if savedCfg.AdminUser != "" {
-					cfg.AdminUser = savedCfg.AdminUser
-				}
-				if savedCfg.AdminPassHash != "" {
-					cfg.AdminPassHash = savedCfg.AdminPassHash
-				}
-			}
+	// Saved credentials take precedence over bootstrap environment variables.
+	fileData, err := os.ReadFile(configPath)
+	if err == nil {
+		var savedCfg model.AppConfig
+		if err := json.Unmarshal(fileData, &savedCfg); err != nil {
+			return nil, fmt.Errorf("读取配置文件失败: %w", err)
 		}
+		if savedCfg.ClickHouse.Host != "" {
+			cfg.ClickHouse = savedCfg.ClickHouse
+		}
+		if savedCfg.AdminUser != "" {
+			cfg.AdminUser = savedCfg.AdminUser
+		}
+		if savedCfg.AdminPassHash != "" {
+			cfg.AdminPassHash = savedCfg.AdminPassHash
+		}
+		if savedCfg.JWTSecret != "" {
+			cfg.JWTSecret = savedCfg.JWTSecret
+		}
+	} else if !os.IsNotExist(err) {
+		return nil, fmt.Errorf("读取配置文件失败: %w", err)
+	}
+	if cfg.AdminUser == "" || cfg.AdminPassHash == "" {
+		return nil, errors.New("首次启动请在环境配置中设置 ADMIN_USER 和 ADMIN_PASSWORD")
+	}
+	if cfg.JWTSecret == "" {
+		key := make([]byte, 32)
+		if _, err := rand.Read(key); err != nil {
+			return nil, err
+		}
+		cfg.JWTSecret = hex.EncodeToString(key)
+	}
+	if err := saveConfig(*cfg); err != nil {
+		return nil, err
 	}
 
 	globalConfig = cfg
@@ -129,21 +147,64 @@ func SaveClickHouseConfig(newCK model.ClickHouseConfig) error {
 		newCK.Password = globalConfig.ClickHouse.Password
 	}
 
-	globalConfig.ClickHouse = newCK
-
-	// Persist to data/config.json
-	if err := os.MkdirAll("data", 0755); err != nil {
-		return fmt.Errorf("failed to create data dir: %w", err)
+	next := *globalConfig
+	next.ClickHouse = newCK
+	if err := saveConfig(next); err != nil {
+		return err
 	}
-
-	data, err := json.MarshalIndent(globalConfig, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal config: %w", err)
-	}
-
-	if err := os.WriteFile(configPath, data, 0644); err != nil {
-		return fmt.Errorf("failed to save config file: %w", err)
-	}
-
+	*globalConfig = next
 	return nil
+}
+
+func UpdateAdmin(username, currentPassword, newUsername, newPassword string) error {
+	configMutex.Lock()
+	defer configMutex.Unlock()
+
+	if username != globalConfig.AdminUser || bcrypt.CompareHashAndPassword([]byte(globalConfig.AdminPassHash), []byte(currentPassword)) != nil {
+		return ErrInvalidCredentials
+	}
+	next := *globalConfig
+	next.AdminUser = newUsername
+	if newPassword != "" {
+		hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		next.AdminPassHash = string(hash)
+	}
+	// Rotating the signing key invalidates every session, including after a restart.
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		return err
+	}
+	next.JWTSecret = hex.EncodeToString(key)
+	if err := saveConfig(next); err != nil {
+		return err
+	}
+	*globalConfig = next
+	return nil
+}
+
+func saveConfig(cfg model.AppConfig) error {
+	if err := os.MkdirAll(filepath.Dir(configPath), 0700); err != nil {
+		return err
+	}
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	// Replace the file only after a complete write, keeping the previous login usable on failure.
+	file, err := os.CreateTemp(filepath.Dir(configPath), ".config-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(file.Name())
+	if _, err := file.Write(data); err != nil {
+		file.Close()
+		return err
+	}
+	if err := file.Close(); err != nil {
+		return err
+	}
+	return os.Rename(file.Name(), configPath)
 }

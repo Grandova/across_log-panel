@@ -26,6 +26,8 @@ export const authApi = {
     client.post<{ token: string; user: { username: string; role: string } }>('/auth/login', data),
   getMe: () => client.get<{ username: string; role: string }>('/auth/me'),
   logout: () => client.post('/auth/logout'),
+  updateAccount: (data: { username: string; current_password: string; password?: string }) =>
+    client.post<{ success: boolean; message: string }>('/auth/account', data),
 };
 
 // Settings & ClickHouse Connection API

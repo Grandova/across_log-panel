@@ -37,14 +37,8 @@ func (s *AuthService) Login(username, password, clientIP string) (*model.LoginRe
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	// Check brute-force lockout for IP
-	if lockTime, exists := s.lockoutUntil[clientIP]; exists {
-		if time.Now().Before(lockTime) {
-			remainingSec := int(time.Until(lockTime).Seconds())
-			return nil, fmt.Errorf("登录失败过多，已被锁定，请等待 %d 秒后再试", remainingSec)
-		}
-		delete(s.lockoutUntil, clientIP)
-		delete(s.loginAttempts, clientIP)
+	if err := s.checkLockout(clientIP); err != nil {
+		return nil, err
 	}
 
 	appCfg := config.GetConfig()
@@ -93,6 +87,37 @@ func (s *AuthService) Login(username, password, clientIP string) (*model.LoginRe
 	}, nil
 }
 
+func (s *AuthService) UpdateAccount(username, currentPassword, newUsername, newPassword, clientIP string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	if err := s.checkLockout(clientIP); err != nil {
+		return err
+	}
+	if err := config.UpdateAdmin(username, currentPassword, newUsername, newPassword); err != nil {
+		if errors.Is(err, config.ErrInvalidCredentials) {
+			s.recordFailedAttempt(clientIP)
+			return err
+		}
+		return errors.New("保存管理员账号失败")
+	}
+	delete(s.loginAttempts, clientIP)
+	delete(s.lockoutUntil, clientIP)
+	return nil
+}
+
+func (s *AuthService) checkLockout(clientIP string) error {
+	if lockTime, exists := s.lockoutUntil[clientIP]; exists {
+		if time.Now().Before(lockTime) {
+			remainingSec := int(time.Until(lockTime).Seconds())
+			return fmt.Errorf("登录失败过多，已被锁定，请等待 %d 秒后再试", remainingSec)
+		}
+		delete(s.lockoutUntil, clientIP)
+		delete(s.loginAttempts, clientIP)
+	}
+
+	return nil
+}
+
 func (s *AuthService) recordFailedAttempt(clientIP string) {
 	s.loginAttempts[clientIP]++
 	if s.loginAttempts[clientIP] >= 5 {
@@ -115,7 +140,7 @@ func (s *AuthService) ValidateToken(tokenStr string) (*Claims, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid && claims.Username == appCfg.AdminUser {
 		return claims, nil
 	}
 

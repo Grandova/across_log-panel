@@ -89,14 +89,15 @@ mv -f "${TMP_BIN}" "${BIN_TARGET}"
 # 3. Create initial .env config if not exists
 echo -e "${BLUE}[3/5] 初始化环境配置 .env ...${NC}"
 if [ ! -f "${INSTALL_DIR}/.env" ]; then
+    umask 077
     cat > "${INSTALL_DIR}/.env" << 'EOF'
 # Access Log Analytics 配置
 PORT=8080
-JWT_SECRET=access-log-analytics-key-2026-production
+JWT_SECRET=
 
 # 初始管理员账号密码
-ADMIN_USER=admin
-ADMIN_PASSWORD=admin123
+ADMIN_USER=
+ADMIN_PASSWORD=
 
 # ClickHouse 连接 (可通过 Web 面板「系统设置」随时修改)
 CLICKHOUSE_PROTOCOL=http
@@ -110,7 +111,10 @@ CLICKHOUSE_SECURE=false
 # 展示时区
 APP_TIMEZONE=Asia/Shanghai
 EOF
+    chmod 600 "${INSTALL_DIR}/.env"
     echo -e "${GREEN}[成功] 已创建配置文件: ${INSTALL_DIR}/.env${NC}"
+    echo -e "请填写 ADMIN_USER 和 ADMIN_PASSWORD 后重新运行安装命令。JWT_SECRET 留空会自动生成。"
+    exit 0
 else
     echo -e "${YELLOW}[提示] 配置文件已存在，保留现有配置。${NC}"
 fi
@@ -201,8 +205,7 @@ if systemctl is-active --quiet access-log-analytics; then
     echo -e "${GREEN}             🎉 Access Log Analytics 安装启动成功！                 ${NC}"
     echo -e "${GREEN}===================================================================${NC}"
     echo -e "访问地址: ${CYAN}http://${SERVER_IP:-localhost}:8080${NC}"
-    echo -e "默认账号: ${YELLOW}admin${NC}"
-    echo -e "初始密码: ${YELLOW}admin123${NC}"
+    echo -e "登录账号: 使用您自行配置的管理员账号与密码"
     echo -e "配置文件: ${PURPLE}${INSTALL_DIR}/.env${NC}"
     echo -e "-------------------------------------------------------------------"
     echo -e "快捷管理命令:"

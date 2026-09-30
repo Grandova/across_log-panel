@@ -54,13 +54,13 @@ export const Login: React.FC = () => {
           <Text type="secondary">登录你的数据分析工作空间</Text>
         </div>
 
-        <Form layout="vertical" onFinish={handleFinish} initialValues={{ username: 'admin' }}>
+        <Form layout="vertical" onFinish={handleFinish}>
           <Form.Item
             name="username"
             label="管理员账号"
             rules={[{ required: true, message: '请输入管理员账号' }]}
           >
-            <Input prefix={<UserOutlined />} placeholder="admin" size="large" />
+            <Input prefix={<UserOutlined />} placeholder="请输入管理员账号" autoComplete="username" size="large" />
           </Form.Item>
 
           <Form.Item
@@ -68,7 +68,7 @@ export const Login: React.FC = () => {
             label="管理密码"
             rules={[{ required: true, message: '请输入管理密码' }]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="初始密码 admin123" size="large" />
+            <Input.Password prefix={<LockOutlined />} placeholder="请输入密码" autoComplete="current-password" size="large" />
           </Form.Item>
 
           <Form.Item style={{ marginTop: 24 }}>
@@ -77,9 +77,6 @@ export const Login: React.FC = () => {
             </Button>
           </Form.Item>
 
-          <div className="login-security">
-            安全提示：密码经 Bcrypt 加盐哈希，5次输错触发 IP 锁定防爆破
-          </div>
         </Form>
         </Card>
         <span className="login-footer">Access Analytics · 数据，尽在掌握</span>

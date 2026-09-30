@@ -44,7 +44,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ darkMode, onToggleTheme 
     latency: 0,
     version: '',
   });
-  const [username, setUsername] = useState<string>('admin');
+  const [username, setUsername] = useState<string>('');
 
   const navigate = useNavigate();
   const location = useLocation();

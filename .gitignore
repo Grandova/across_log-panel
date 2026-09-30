@@ -14,8 +14,9 @@ yarn-error.log*
 
 # Environment and Data files
 .env
-data/config.json
-data/audit.jsonl
+**/data/config.json
+**/data/.config-*
+**/data/audit.jsonl
 *.log
 
 # IDE

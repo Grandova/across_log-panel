@@ -102,6 +102,7 @@ func main() {
 		{
 			// Current user
 			protected.GET("/auth/me", authHandler.GetMe)
+			protected.POST("/auth/account", authHandler.UpdateAccount)
 			protected.POST("/auth/logout", authHandler.Logout)
 
 			// Database Settings & Reconnect
@@ -218,7 +219,6 @@ func main() {
 	log.Printf("=====================================================")
 	log.Printf("  Access Log Analytics 后端服务正在启动...")
 	log.Printf("  监听地址: http://0.0.0.0%s", addr)
-	log.Printf("  默认管理员: %s (密码初始为 admin123)", cfg.AdminUser)
 	log.Printf("  时区设置: Asia/Shanghai (UTC+8)")
 	log.Printf("=====================================================")
 

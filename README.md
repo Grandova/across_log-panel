@@ -19,10 +19,11 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Grandova/across_log-pane
 > - 自动注册并启动 `systemd` 后台守护服务 `access-log-analytics`（开机自启、崩溃自动重启）；
 > - 安装便捷终端管理命令 `access-log`。
 
+首次安装会创建 `/opt/across_log-panel/.env` 并暂停。填写其中的 `ADMIN_USER` 和 `ADMIN_PASSWORD` 后重新运行安装命令。系统没有通用默认密码。
+
 安装完成后直接访问：
 - **Web 访问地址**：`http://服务器IP:8080`
-- **默认管理员账号**：`admin`
-- **初始登录密码**：`admin123`
+- **管理员登录**：使用首次安装时自行配置的账号与密码；登录后可在「系统设置 → 管理员账号」修改。
 - **ClickHouse 配置**：登录后点击左侧菜单 **「系统设置」**，填写您的 ClickHouse 8123 端口地址，点击测试连接并保存即可！
 
 ---
@@ -123,6 +124,10 @@ flowchart TB
 git clone https://github.com/Grandova/across_log-panel.git
 cd across_log-panel
 
+# 首次启动：复制示例并填写自己的 ADMIN_USER、ADMIN_PASSWORD
+cp .env.example .env
+${EDITOR:-nano} .env
+
 # 构建并启动容器
 docker-compose -f deploy/docker-compose.yml up -d
 ```
@@ -138,12 +143,12 @@ docker-compose -f deploy/docker-compose.yml up -d
 # 服务监听端口
 PORT=8080
 
-# JWT 密钥
-JWT_SECRET=access-log-analytics-secret-key-2026
+# JWT 密钥（留空自动生成并持久化）
+JWT_SECRET=
 
 # 管理员账号与初始密码
-ADMIN_USER=admin
-ADMIN_PASSWORD=admin123
+ADMIN_USER=
+ADMIN_PASSWORD=
 
 # ClickHouse 数据库连接 (通过 8123 端口 HTTP 协议连接)
 CLICKHOUSE_PROTOCOL=http
@@ -157,6 +162,8 @@ CLICKHOUSE_SECURE=false
 # 界面展示时区
 APP_TIMEZONE=Asia/Shanghai
 ```
+
+> **账号设置**：首次启动必须填写 `ADMIN_USER` 和 `ADMIN_PASSWORD`；初始化后只持久化密码哈希，可删除 `.env` 中的 `ADMIN_PASSWORD`。后台修改账号会立即使所有旧登录失效，重启后仍使用已保存的新账号。`data/config.json` 含私有配置，请勿上传或公开。
 
 > **提示**：除了直接编辑 `.env` 文件，您可以在登录 Web 面板后，在 **「系统设置」** 界面直接进行可视化修改并一键测试连通性，保存后即刻热生效。
 

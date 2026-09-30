@@ -12,7 +12,7 @@ func AuthMiddleware(authSvc *service.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Allow health check and login without token
 		path := c.Request.URL.Path
-		if path == "/api/v1/auth/login" || path == "/api/v1/health" || path == "/api/v1/settings/database/test" {
+		if path == "/api/v1/auth/login" || path == "/api/v1/health" {
 			c.Next()
 			return
 		}

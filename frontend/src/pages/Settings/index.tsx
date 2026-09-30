@@ -25,13 +25,17 @@ import {
   LockOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { settingsApi } from '../../api/index.ts';
+import { useNavigate } from 'react-router-dom';
+import { authApi, settingsApi } from '../../api/index.ts';
 import { ClickHouseConfig, ClickHouseConfigResponse } from '../../api/types.ts';
 
 const { Title } = Typography;
 
 export const Settings: React.FC = () => {
   const [form] = Form.useForm();
+  const [accountForm] = Form.useForm();
+  const [savingAccount, setSavingAccount] = useState(false);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(false);
   const [testing, setTesting] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
@@ -66,6 +70,7 @@ export const Settings: React.FC = () => {
 
   useEffect(() => {
     loadSettings();
+    authApi.getMe().then((res: any) => accountForm.setFieldsValue({ username: res.username })).catch(console.error);
   }, []);
 
   const handleTest = async () => {
@@ -121,11 +126,26 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const handleAccountSave = async (values: { username: string; current_password: string; password?: string }) => {
+    setSavingAccount(true);
+    try {
+      await authApi.updateAccount({ username: values.username, current_password: values.current_password, password: values.password });
+      accountForm.resetFields();
+      localStorage.removeItem('token');
+      message.success('管理员账号已更新，请重新登录');
+      navigate('/login', { replace: true });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingAccount(false);
+    }
+  };
+
   return (
     <div className="settings-page">
       <div className="settings-heading">
-        <Title level={2}>数据库设置</Title>
-        <p>管理 ClickHouse 连接与认证信息，保存后即时生效。</p>
+        <Title level={2}>系统设置</Title>
+        <p>管理数据库连接与管理员登录账号。</p>
       </div>
       <div className="settings-grid">
         <Card className="connection-card" bordered={false}>
@@ -283,6 +303,36 @@ export const Settings: React.FC = () => {
               >
                 保存并应用新配置
               </Button>
+            </Space>
+          </Form>
+        </Card>
+        <Card className="account-form-card" bordered={false}>
+          <div className="form-section-heading"><span className="section-icon section-red"><UserOutlined /></span><div><h3>管理员账号</h3><p>修改后所有登录会话将失效，请使用新账号重新登录。</p></div></div>
+          <Form name="admin-account" form={accountForm} layout="vertical" onFinish={handleAccountSave}>
+            <Row gutter={24} align="top">
+              <Col xs={24} sm={12}>
+                <Form.Item name="username" label="管理员用户名" rules={[{ required: true, whitespace: true, message: '请输入管理员用户名' }, { max: 64, message: '用户名最多 64 个字符' }]}>
+                  <Input prefix={<UserOutlined />} autoComplete="username" placeholder="输入管理员用户名" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="current_password" label="当前密码" rules={[{ required: true, message: '请输入当前密码以验证身份' }]}>
+                  <Input.Password prefix={<LockOutlined />} autoComplete="current-password" placeholder="输入当前密码" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="password" label="新密码" extra="留空保持现有密码。新密码须为 8–72 字节。" rules={[{ validator: (_, value) => !value || (new TextEncoder().encode(value).length >= 8 && new TextEncoder().encode(value).length <= 72) ? Promise.resolve() : Promise.reject(new Error('新密码长度应为 8–72 字节')) }]}>
+                  <Input.Password prefix={<LockOutlined />} autoComplete="new-password" placeholder="输入新密码" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="confirm_password" label="确认新密码" dependencies={['password']} rules={[({ getFieldValue }) => ({ validator: (_, value) => (value || '') === (getFieldValue('password') || '') ? Promise.resolve() : Promise.reject(new Error('两次输入的密码不一致')) })]}>
+                  <Input.Password prefix={<LockOutlined />} autoComplete="new-password" placeholder="再次输入新密码" />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Space className="settings-actions">
+              <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={savingAccount}>保存管理员账号</Button>
             </Space>
           </Form>
         </Card>
