@@ -258,11 +258,11 @@ export const HostDetail: React.FC = () => {
             返回排行
           </Button>
           <div>
-            <Title level={4} style={{ margin: 0, fontFamily: 'monospace', color: '#722ed1' }}>
+            <Title level={4} style={{ margin: 0, fontFamily: 'monospace', color: 'var(--primary)' }}>
               <GlobalOutlined style={{ marginRight: 8 }} />
               {host}
             </Title>
-            <div style={{ color: '#8c8c8c', fontSize: 13 }}>目标域名深度画像与访问者下钻分析</div>
+            <div style={{ color: 'var(--muted)', fontSize: 13 }}>目标域名深度画像与访问者下钻分析</div>
           </div>
         </Space>
 
@@ -282,7 +282,7 @@ export const HostDetail: React.FC = () => {
               title="访问总请求数"
               value={overview?.total_requests || 0}
               formatter={(v) => formatNumber(Number(v))}
-              prefix={<GlobalOutlined style={{ color: '#722ed1' }} />}
+              prefix={<GlobalOutlined style={{ color: 'var(--primary)' }} />}
             />
           </Card>
         </Col>
@@ -293,7 +293,7 @@ export const HostDetail: React.FC = () => {
               title="独立访问 UID"
               value={overview?.unique_users || 0}
               formatter={(v) => formatNumber(Number(v))}
-              prefix={<UserOutlined style={{ color: '#1677ff' }} />}
+              prefix={<UserOutlined style={{ color: 'var(--primary)' }} />}
             />
           </Card>
         </Col>
@@ -304,7 +304,7 @@ export const HostDetail: React.FC = () => {
               title="独立客户端 IP"
               value={overview?.unique_ips || 0}
               formatter={(v) => formatNumber(Number(v))}
-              prefix={<DesktopOutlined style={{ color: '#13c2c2' }} />}
+              prefix={<DesktopOutlined style={{ color: 'var(--teal)' }} />}
             />
           </Card>
         </Col>
@@ -315,7 +315,7 @@ export const HostDetail: React.FC = () => {
               title="涉及服务节点"
               value={overview?.node_count || 0}
               formatter={(v) => formatNumber(Number(v))}
-              prefix={<ClusterOutlined style={{ color: '#fa8c16' }} />}
+              prefix={<ClusterOutlined style={{ color: 'var(--orange)' }} />}
             />
           </Card>
         </Col>
@@ -326,7 +326,7 @@ export const HostDetail: React.FC = () => {
               title="首次访问时间"
               value={overview?.first_seen || '-'}
               valueStyle={{ fontSize: 13 }}
-              prefix={<ClockCircleOutlined style={{ color: '#52c41a' }} />}
+              prefix={<ClockCircleOutlined style={{ color: 'var(--teal)' }} />}
             />
           </Card>
         </Col>
@@ -337,7 +337,7 @@ export const HostDetail: React.FC = () => {
               title="最后访问时间"
               value={overview?.last_seen || '-'}
               valueStyle={{ fontSize: 13 }}
-              prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
+              prefix={<ClockCircleOutlined style={{ color: 'var(--orange)' }} />}
             />
           </Card>
         </Col>
@@ -354,7 +354,7 @@ export const HostDetail: React.FC = () => {
               children: (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#8c8c8c', fontSize: 13 }}>
+                    <span style={{ color: 'var(--muted)', fontSize: 13 }}>
                       统计在此时间段内访问过 <b>{host}</b> 的所有用户，支持按请求量和最后活跃时间排序：
                     </span>
                     <Radio.Group

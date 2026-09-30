@@ -236,7 +236,7 @@ export const UserDetail: React.FC = () => {
           {/* Header Bar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Title level={4} style={{ margin: 0 }}>
-              <UserOutlined style={{ color: '#1677ff', marginRight: 8 }} />
+              <UserOutlined style={{ color: 'var(--primary)', marginRight: 8 }} />
               UID: {currentUid} 用户画像
             </Title>
           </div>
@@ -249,7 +249,7 @@ export const UserDetail: React.FC = () => {
                   title="用户总访问请求"
                   value={overview?.total_requests || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<UserOutlined style={{ color: '#1677ff' }} />}
+                  prefix={<UserOutlined style={{ color: 'var(--primary)' }} />}
                 />
               </Card>
             </Col>
@@ -260,7 +260,7 @@ export const UserDetail: React.FC = () => {
                   title="访问 Host 域名数"
                   value={overview?.host_count || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<GlobalOutlined style={{ color: '#722ed1' }} />}
+                  prefix={<GlobalOutlined style={{ color: 'var(--primary)' }} />}
                 />
               </Card>
             </Col>
@@ -271,7 +271,7 @@ export const UserDetail: React.FC = () => {
                   title="使用过 IP 数量"
                   value={overview?.ip_count || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<DesktopOutlined style={{ color: '#13c2c2' }} />}
+                  prefix={<DesktopOutlined style={{ color: 'var(--teal)' }} />}
                 />
               </Card>
             </Col>
@@ -282,7 +282,7 @@ export const UserDetail: React.FC = () => {
                   title="经过服务节点数"
                   value={overview?.node_count || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<ClusterOutlined style={{ color: '#fa8c16' }} />}
+                  prefix={<ClusterOutlined style={{ color: 'var(--orange)' }} />}
                 />
               </Card>
             </Col>
@@ -293,7 +293,7 @@ export const UserDetail: React.FC = () => {
                   title="首次访问时间"
                   value={overview?.first_seen || '-'}
                   valueStyle={{ fontSize: 13 }}
-                  prefix={<ClockCircleOutlined style={{ color: '#52c41a' }} />}
+                  prefix={<ClockCircleOutlined style={{ color: 'var(--teal)' }} />}
                 />
               </Card>
             </Col>
@@ -304,7 +304,7 @@ export const UserDetail: React.FC = () => {
                   title="最后活跃时间"
                   value={overview?.last_seen || '-'}
                   valueStyle={{ fontSize: 13 }}
-                  prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
+                  prefix={<ClockCircleOutlined style={{ color: 'var(--orange)' }} />}
                 />
               </Card>
             </Col>
@@ -379,9 +379,9 @@ export const UserDetail: React.FC = () => {
         </>
       ) : (
         <Card bordered={false} style={{ textAlign: 'center', padding: '60px 0' }}>
-          <UserOutlined style={{ fontSize: 48, color: '#1677ff', marginBottom: 16 }} />
+          <UserOutlined style={{ fontSize: 48, color: 'var(--primary)', marginBottom: 16 }} />
           <Title level={4}>请输入想要查询的 UID</Title>
-          <div style={{ color: '#8c8c8c' }}>
+          <div style={{ color: 'var(--muted)' }}>
             支持输入数字 UID 查看用户访问过的所有域名、使用过的 IP、涉及节点及完整时间倒序流水
           </div>
         </Card>

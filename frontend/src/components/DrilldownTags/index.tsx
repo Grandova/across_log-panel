@@ -18,7 +18,7 @@ export const HostTag: React.FC<HostTagProps> = ({ host }) => {
 
   return (
     <Tag
-      color="purple"
+      color="green"
       style={{ cursor: 'pointer', margin: '2px 0', fontFamily: 'monospace' }}
       onClick={() => navigate(`/hosts/${encodeURIComponent(host)}`)}
     >

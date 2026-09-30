@@ -51,22 +51,7 @@ export const HostRanking: React.FC = () => {
       key: 'rank',
       width: 70,
       render: (r: number) => (
-        <span
-          style={{
-            display: 'inline-block',
-            width: 26,
-            height: 26,
-            borderRadius: '50%',
-            textAlign: 'center',
-            lineHeight: '26px',
-            fontWeight: 'bold',
-            fontSize: 13,
-            backgroundColor: r === 1 ? '#ff4d4f' : r === 2 ? '#fa8c16' : r === 3 ? '#faad14' : '#f0f0f0',
-            color: r <= 3 ? '#fff' : '#595959',
-          }}
-        >
-          {r}
-        </span>
+        <span className={`rank-badge${r <= 3 ? ' rank-top' : ''}`}>{String(r).padStart(2, '0')}</span>
       ),
     },
     {
@@ -126,10 +111,10 @@ export const HostRanking: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <Title level={4} style={{ margin: 0 }}>
-            <TrophyOutlined style={{ color: '#faad14', marginRight: 8 }} />
+            <TrophyOutlined style={{ color: 'var(--orange)', marginRight: 8 }} />
             Host 访问排行榜
           </Title>
-          <div style={{ color: '#8c8c8c', fontSize: 13, marginTop: 2 }}>
+          <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
             多维统计全网访问频次最高的目标域名，点击域名可钻取访问该 Host 的用户画像
           </div>
         </div>

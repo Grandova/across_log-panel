@@ -42,10 +42,10 @@ export const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({
   };
 
   return (
-    <Space wrap size="small" align="center">
+    <Space className="time-range" wrap size="small" align="center">
       <Tooltip title="所有时间均以东八区 Asia/Shanghai 标准时区展示与输入，后端自动按 UTC 范围精确查询 ClickHouse">
-        <Tag color="success" style={{ fontWeight: 600, padding: '2px 8px', fontSize: 12 }}>
-          UTC+8 / Asia/Shanghai
+        <Tag className="timezone-tag">
+          UTC+8
         </Tag>
       </Tooltip>
 
@@ -75,7 +75,7 @@ export const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({
               : [dayjs().subtract(24, 'hour'), dayjs()]
           }
           onChange={handleRangePickerChange}
-          style={{ width: 360 }}
+          style={{ width: 'min(360px, 100%)' }}
         />
       )}
     </Space>

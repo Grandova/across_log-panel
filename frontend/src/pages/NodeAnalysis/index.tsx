@@ -231,7 +231,7 @@ export const NodeAnalysis: React.FC = () => {
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Title level={4} style={{ margin: 0 }}>
-              <ClusterOutlined style={{ color: '#fa8c16', marginRight: 8 }} />
+              <ClusterOutlined style={{ color: 'var(--orange)', marginRight: 8 }} />
               服务节点 #{currentNodeId} 运行画像
             </Title>
           </div>
@@ -244,7 +244,7 @@ export const NodeAnalysis: React.FC = () => {
                   title="节点总处理请求"
                   value={overview?.total_requests || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<ClusterOutlined style={{ color: '#fa8c16' }} />}
+                  prefix={<ClusterOutlined style={{ color: 'var(--orange)' }} />}
                 />
               </Card>
             </Col>
@@ -255,7 +255,7 @@ export const NodeAnalysis: React.FC = () => {
                   title="服务活跃 UID"
                   value={overview?.active_users || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<UserOutlined style={{ color: '#1677ff' }} />}
+                  prefix={<UserOutlined style={{ color: 'var(--primary)' }} />}
                 />
               </Card>
             </Col>
@@ -266,7 +266,7 @@ export const NodeAnalysis: React.FC = () => {
                   title="承载独立 IP 数"
                   value={overview?.unique_ips || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<DesktopOutlined style={{ color: '#13c2c2' }} />}
+                  prefix={<DesktopOutlined style={{ color: 'var(--teal)' }} />}
                 />
               </Card>
             </Col>
@@ -277,7 +277,7 @@ export const NodeAnalysis: React.FC = () => {
                   title="转发 Host 数量"
                   value={overview?.host_count || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<GlobalOutlined style={{ color: '#722ed1' }} />}
+                  prefix={<GlobalOutlined style={{ color: 'var(--primary)' }} />}
                 />
               </Card>
             </Col>
@@ -288,7 +288,7 @@ export const NodeAnalysis: React.FC = () => {
                   title="最早记录时间"
                   value={overview?.first_seen || '-'}
                   valueStyle={{ fontSize: 13 }}
-                  prefix={<ClockCircleOutlined style={{ color: '#52c41a' }} />}
+                  prefix={<ClockCircleOutlined style={{ color: 'var(--teal)' }} />}
                 />
               </Card>
             </Col>
@@ -299,7 +299,7 @@ export const NodeAnalysis: React.FC = () => {
                   title="最后活跃时间"
                   value={overview?.last_seen || '-'}
                   valueStyle={{ fontSize: 13 }}
-                  prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
+                  prefix={<ClockCircleOutlined style={{ color: 'var(--orange)' }} />}
                 />
               </Card>
             </Col>

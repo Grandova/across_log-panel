@@ -76,7 +76,7 @@ export const GlobalSearch: React.FC = () => {
       case 'ip':
         return 'cyan';
       case 'host':
-        return 'purple';
+        return 'green';
       default:
         return 'default';
     }
@@ -96,8 +96,9 @@ export const GlobalSearch: React.FC = () => {
   };
 
   return (
-    <Space.Compact style={{ width: 440 }}>
+    <Space.Compact className="global-search">
       <Select
+        aria-label="搜索类型"
         value={searchMode}
         onChange={(val) => setSearchMode(val)}
         style={{ width: 110 }}
@@ -109,11 +110,12 @@ export const GlobalSearch: React.FC = () => {
         ]}
       />
       <Input.Search
-        placeholder="输入 UID (如 16728)、Host (如 youtube.com) 或 IP (如 39.173.x.x)"
+        placeholder="搜索 UID、域名或 IP…"
+        aria-label="搜索 UID、域名或 IP"
         allowClear
         enterButton={
           <span>
-            <SearchOutlined /> 搜索
+            <SearchOutlined />
           </span>
         }
         value={query}

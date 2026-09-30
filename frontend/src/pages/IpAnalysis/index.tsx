@@ -262,7 +262,7 @@ export const IpAnalysis: React.FC = () => {
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Title level={4} style={{ margin: 0 }}>
-              <DesktopOutlined style={{ color: '#13c2c2', marginRight: 8 }} />
+              <DesktopOutlined style={{ color: 'var(--teal)', marginRight: 8 }} />
               客户端 IP: {currentIp} 行为画像
             </Title>
           </div>
@@ -275,7 +275,7 @@ export const IpAnalysis: React.FC = () => {
                   title="该 IP 总请求次数"
                   value={overview?.total_requests || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<DesktopOutlined style={{ color: '#13c2c2' }} />}
+                  prefix={<DesktopOutlined style={{ color: 'var(--teal)' }} />}
                 />
               </Card>
             </Col>
@@ -286,7 +286,7 @@ export const IpAnalysis: React.FC = () => {
                   title="关联 UID 数量"
                   value={overview?.user_count || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<UserOutlined style={{ color: '#1677ff' }} />}
+                  prefix={<UserOutlined style={{ color: 'var(--primary)' }} />}
                 />
               </Card>
             </Col>
@@ -297,7 +297,7 @@ export const IpAnalysis: React.FC = () => {
                   title="访问 Host 域名数"
                   value={overview?.host_count || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<GlobalOutlined style={{ color: '#722ed1' }} />}
+                  prefix={<GlobalOutlined style={{ color: 'var(--primary)' }} />}
                 />
               </Card>
             </Col>
@@ -308,7 +308,7 @@ export const IpAnalysis: React.FC = () => {
                   title="通过节点数"
                   value={overview?.node_count || 0}
                   formatter={(v) => formatNumber(Number(v))}
-                  prefix={<ClusterOutlined style={{ color: '#fa8c16' }} />}
+                  prefix={<ClusterOutlined style={{ color: 'var(--orange)' }} />}
                 />
               </Card>
             </Col>
@@ -319,7 +319,7 @@ export const IpAnalysis: React.FC = () => {
                   title="首次出现时间"
                   value={overview?.first_seen || '-'}
                   valueStyle={{ fontSize: 13 }}
-                  prefix={<ClockCircleOutlined style={{ color: '#52c41a' }} />}
+                  prefix={<ClockCircleOutlined style={{ color: 'var(--teal)' }} />}
                 />
               </Card>
             </Col>
@@ -330,7 +330,7 @@ export const IpAnalysis: React.FC = () => {
                   title="最后活跃时间"
                   value={overview?.last_seen || '-'}
                   valueStyle={{ fontSize: 13 }}
-                  prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
+                  prefix={<ClockCircleOutlined style={{ color: 'var(--orange)' }} />}
                 />
               </Card>
             </Col>
@@ -416,9 +416,9 @@ export const IpAnalysis: React.FC = () => {
         </>
       ) : (
         <Card bordered={false} style={{ textAlign: 'center', padding: '60px 0' }}>
-          <DesktopOutlined style={{ fontSize: 48, color: '#13c2c2', marginBottom: 16 }} />
+          <DesktopOutlined style={{ fontSize: 48, color: 'var(--teal)', marginBottom: 16 }} />
           <Title level={4}>请输入想要分析的客户端 IP</Title>
-          <div style={{ color: '#8c8c8c' }}>
+          <div style={{ color: 'var(--muted)' }}>
             支持输入客户端 IPv4/IPv6，查看该 IP 下有哪些用户 UID、访问了什么域名以及经过哪些代理节点
           </div>
         </Card>

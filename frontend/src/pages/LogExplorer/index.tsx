@@ -186,10 +186,10 @@ export const LogExplorer: React.FC = () => {
       {/* Title */}
       <div>
         <Title level={4} style={{ margin: 0 }}>
-          <TableOutlined style={{ color: '#1677ff', marginRight: 8 }} />
+          <TableOutlined style={{ color: 'var(--primary)', marginRight: 8 }} />
           访问日志明细检索 (Data Explorer)
         </Title>
-        <div style={{ color: '#8c8c8c', fontSize: 13, marginTop: 2 }}>
+        <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
           支持多条件 AND 组合筛选，针对 ClickHouse 性能优化参数化分页查询，支持海量日志流式 CSV 导出
         </div>
       </div>
@@ -261,7 +261,7 @@ export const LogExplorer: React.FC = () => {
               flexWrap: 'wrap',
               gap: 12,
               paddingTop: 8,
-              borderTop: '1px solid #f0f0f0',
+              borderTop: '1px solid var(--line)',
             }}
           >
             <TimeRangeSelector value={timeRange} onChange={(range) => setTimeRange(range)} />
@@ -293,7 +293,7 @@ export const LogExplorer: React.FC = () => {
           <span>
             查询结果: 共匹配 <b>{formatNumber(total)}</b> 条记录
             {costMs > 0 && (
-              <span style={{ fontSize: 12, color: '#8c8c8c', marginLeft: 8 }}>
+              <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>
                 (ClickHouse 执行耗时: {costMs}ms)
               </span>
             )}

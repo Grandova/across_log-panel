@@ -130,10 +130,10 @@ export const DomainLookup: React.FC = () => {
       {/* Title */}
       <div>
         <Title level={4} style={{ margin: 0 }}>
-          <GlobalOutlined style={{ color: '#722ed1', marginRight: 8 }} />
+          <GlobalOutlined style={{ color: 'var(--primary)', marginRight: 8 }} />
           域名反查 UID
         </Title>
-        <div style={{ color: '#8c8c8c', fontSize: 13, marginTop: 2 }}>
+        <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
           输入域名快速排查是哪些 UID 在访问该域名，支持精确匹配、包含匹配及子域名自动级联匹配
         </div>
       </div>
@@ -190,7 +190,7 @@ export const DomainLookup: React.FC = () => {
           title={
             <span>
               反查结果：访问过 <b>{searchedDomain}</b> 的 UID 列表
-              <Tag color="purple" style={{ marginLeft: 8 }}>
+              <Tag color="green" style={{ marginLeft: 8 }}>
                 共 {total} 个用户
               </Tag>
             </span>
@@ -216,9 +216,9 @@ export const DomainLookup: React.FC = () => {
         </Card>
       ) : (
         <Card bordered={false} style={{ textAlign: 'center', padding: '60px 0' }}>
-          <GlobalOutlined style={{ fontSize: 48, color: '#722ed1', marginBottom: 16 }} />
+          <GlobalOutlined style={{ fontSize: 48, color: 'var(--primary)', marginBottom: 16 }} />
           <Title level={4}>请输入想要反查的目标域名</Title>
-          <div style={{ color: '#8c8c8c' }}>
+          <div style={{ color: 'var(--muted)' }}>
             支持 youtube.com、gstatic.com 等域名，系统将秒级聚合访问过该域名的所有用户 UID 并统计总请求量
           </div>
         </Card>

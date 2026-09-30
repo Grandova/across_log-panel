@@ -176,4 +176,5 @@ export const nodeApi = {
 export const auditApi = {
   getLogs: (params?: { page?: number; page_size?: number }) =>
     client.get<{ total: number; page: number; page_size: number; data: AuditLogEntry[] }>('/audit/logs', { params }),
+  clearLogs: () => client.delete<{ success: boolean; message: string }>('/audit/logs'),
 };

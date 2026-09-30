@@ -97,19 +97,28 @@ func (r *AuditRepository) Record(username, clientIP, action, target, details str
 		r.logs = r.logs[:2000]
 	}
 
-	// Append to file asynchronously
-	go func(item model.AuditLogEntry) {
-		bytes, err := json.Marshal(item)
+	// Keep persistence under the same lock so a pending append cannot restore cleared logs.
+	bytes, err := json.Marshal(entry)
+	if err == nil {
+		bytes = append(bytes, '\n')
+		_ = os.MkdirAll(filepath.Dir(r.filePath), 0755)
+		f, err := os.OpenFile(r.filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err == nil {
-			bytes = append(bytes, '\n')
-			_ = os.MkdirAll("data", 0755)
-			f, err := os.OpenFile(r.filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			if err == nil {
-				_, _ = f.Write(bytes)
-				_ = f.Close()
-			}
+			_, _ = f.Write(bytes)
+			_ = f.Close()
 		}
-	}(entry)
+	}
+}
+
+func (r *AuditRepository) Clear() error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	if err := os.WriteFile(r.filePath, nil, 0644); err != nil {
+		return err
+	}
+	r.logs = nil
+	return nil
 }
 
 func (r *AuditRepository) Query(page, pageSize int) (int64, []model.AuditLogEntry) {

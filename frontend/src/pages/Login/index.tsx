@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Form, Input, Button, Typography, Space, message } from 'antd';
-import { UserOutlined, LockOutlined, DatabaseOutlined } from '@ant-design/icons';
+import { Card, Form, Input, Button, Typography, message } from 'antd';
+import { UserOutlined, LockOutlined, DatabaseOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/index.ts';
 
@@ -31,47 +31,27 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%)',
-        padding: 20,
-      }}
-    >
-      <Card
-        bordered={false}
-        style={{
-          width: 420,
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-          borderRadius: 12,
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: '50%',
-              backgroundColor: '#e6f4ff',
-              color: '#1677ff',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 28,
-              marginBottom: 12,
-            }}
-          >
-            <DatabaseOutlined />
+    <div className="login-page">
+      <section className="login-story">
+        <div className="brand"><span className="brand-mark"><DatabaseOutlined /></span><span className="brand-copy"><strong>Access<span>.</span></strong><small>LOG ANALYTICS</small></span></div>
+        <div className="login-story-content">
+          <div className="eyebrow">YOUR NETWORK, IN FOCUS</div>
+          <h1>复杂的数据，<br />清晰的<span>洞察。</span></h1>
+          <p>从每一次访问出发，连接用户、域名与节点。<br />在一个工作空间里，看见网络的全貌。</p>
+          <div className="login-visual" aria-hidden="true">
+            <div className="visual-title"><span className="visual-dot" />ACCESS OVERVIEW<span>● ● ●</span></div>
+            <div className="visual-bars">{[32, 54, 43, 72, 57, 85, 67, 95, 76, 100, 88, 114].map((height, i) => <i key={i} style={{ height, animationDelay: `${i * 45}ms` }} />)}</div>
+            <div className="visual-footer"><span>用户</span><span>域名</span><span>节点</span><span>访问轨迹</span></div>
           </div>
-          <Title level={3} style={{ margin: 0, fontWeight: 700 }}>
-            Access Log Analytics
-          </Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            ClickHouse 用户访问日志可视化分析后台
-          </Text>
+        </div>
+        <div className="login-story-footer">ACCESS LOG ANALYTICS <span>让每一次访问，都有迹可循。</span></div>
+      </section>
+      <section className="login-form-panel">
+        <Card className="login-card" bordered={false}>
+        <div className="login-heading">
+          <span className="login-welcome">WELCOME BACK</span>
+          <Title level={2}>欢迎回来</Title>
+          <Text type="secondary">登录你的数据分析工作空间</Text>
         </div>
 
         <Form layout="vertical" onFinish={handleFinish} initialValues={{ username: 'admin' }}>
@@ -93,15 +73,17 @@ export const Login: React.FC = () => {
 
           <Form.Item style={{ marginTop: 24 }}>
             <Button type="primary" htmlType="submit" size="large" block loading={loading}>
-              登 录
+              登录工作空间 <ArrowRightOutlined />
             </Button>
           </Form.Item>
 
-          <div style={{ textAlign: 'center', color: '#8c8c8c', fontSize: 12 }}>
+          <div className="login-security">
             安全提示：密码经 Bcrypt 加盐哈希，5次输错触发 IP 锁定防爆破
           </div>
         </Form>
-      </Card>
+        </Card>
+        <span className="login-footer">Access Analytics · 数据，尽在掌握</span>
+      </section>
     </div>
   );
 };

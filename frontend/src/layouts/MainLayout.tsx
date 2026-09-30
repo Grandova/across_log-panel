@@ -3,11 +3,9 @@ import {
   Layout,
   Menu,
   Button,
-  Space,
   Badge,
   Dropdown,
   Tooltip,
-  theme,
   Alert,
 } from 'antd';
 import {
@@ -24,6 +22,9 @@ import {
   SunOutlined,
   MoonOutlined,
   DatabaseOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { GlobalSearch } from '../components/GlobalSearch/index.tsx';
@@ -47,7 +48,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ darkMode, onToggleTheme 
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { token } = theme.useToken();
+
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 640px)').matches) setCollapsed(true);
+  }, [location.pathname]);
 
   // Load status periodically
   const fetchStatus = async () => {
@@ -98,7 +102,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ darkMode, onToggleTheme 
     {
       key: '/dashboard',
       icon: <DashboardOutlined />,
-      label: '仪表盘 Dashboard',
+      label: '数据总览',
     },
     {
       key: '/hosts/ranking',
@@ -138,7 +142,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ darkMode, onToggleTheme 
     {
       key: '/settings',
       icon: <SettingOutlined />,
-      label: '数据库与系统设置',
+      label: '系统设置',
     },
   ];
 
@@ -173,136 +177,88 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ darkMode, onToggleTheme 
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout className={`app-shell${collapsed ? ' is-collapsed' : ''}`}>
+      {!collapsed && <button className="nav-backdrop" aria-label="关闭导航" onClick={() => setCollapsed(true)} />}
       <Sider
-        collapsible
+        className="app-sidebar"
         collapsed={collapsed}
-        onCollapse={(val) => setCollapsed(val)}
-        theme={darkMode ? 'dark' : 'light'}
-        width={220}
-        style={{
-          boxShadow: '1px 0 6px rgba(0, 21, 41, 0.08)',
-          zIndex: 10,
-        }}
+        trigger={null}
+        breakpoint="lg"
+        onBreakpoint={setCollapsed}
+        width={204}
+        collapsedWidth={76}
       >
-        <div
-          style={{
-            height: 60,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            padding: collapsed ? '0' : '0 20px',
-            borderBottom: darkMode ? '1px solid #303030' : '1px solid #f0f0f0',
-            fontWeight: 700,
-            fontSize: 16,
-            color: '#1677ff',
-            letterSpacing: 0.5,
-          }}
-        >
-          <DatabaseOutlined style={{ fontSize: 22, marginRight: collapsed ? 0 : 10 }} />
-          {!collapsed && <span>Access Analytics</span>}
+        <a className="brand" href="/dashboard" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); }} aria-label="Access Analytics 首页">
+          <span className="brand-mark"><DatabaseOutlined /></span>
+          <span className="brand-copy"><strong>Access<span>Log</span></strong></span>
+        </a>
+        <div className="sidebar-panel">
+          <Menu
+            mode="inline"
+            selectedKeys={[getSelectedKey()]}
+            items={menuItems}
+            onClick={({ key }) => navigate(key)}
+          />
+          <div className="sidebar-bottom">
+            <Button type="text" block icon={<LogoutOutlined />} onClick={handleLogout} className="sidebar-logout" aria-label="退出登录">{!collapsed && '退出登录'}</Button>
+            <Button className="sidebar-collapse" type="text" block
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              aria-label={collapsed ? '展开侧栏' : '收起侧栏'}>
+              {!collapsed && '收起侧栏'}
+            </Button>
+          </div>
         </div>
-
-        <Menu
-          theme={darkMode ? 'dark' : 'light'}
-          mode="inline"
-          selectedKeys={[getSelectedKey()]}
-          items={menuItems}
-          onClick={({ key }) => navigate(key)}
-          style={{ marginTop: 8 }}
-        />
       </Sider>
 
-      <Layout>
-        <Header
-          style={{
-            padding: '0 24px',
-            background: token.colorBgContainer,
-            borderBottom: darkMode ? '1px solid #303030' : '1px solid #f0f0f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            height: 60,
-          }}
-        >
-          <Space size="large" align="center">
+      <Layout className="app-main">
+        <Header className="app-header">
+          <div className="header-left">
+            <Button className="mobile-menu" type="text" icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? '展开导航' : '收起导航'} />
+            <div className="header-breadcrumb">工作空间 <span>/</span> <strong>{menuItems.find((item) => item.key === getSelectedKey())?.label}</strong></div>
+          </div>
+          <div className="header-actions">
             <GlobalSearch />
-          </Space>
-
-          <Space size="middle" align="center">
-            {/* ClickHouse Status Indicator */}
-            <Tooltip
-              title={
-                ckStatus.connected
-                  ? `ClickHouse 已连接 (版本: ${ckStatus.version}, 延迟: ${ckStatus.latency}ms)`
-                  : 'ClickHouse 未连接，点击前往设置面板配置'
-              }
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  padding: '4px 10px',
-                  borderRadius: 6,
-                  backgroundColor: darkMode ? '#262626' : '#f5f5f5',
-                }}
-                onClick={() => navigate('/settings')}
-              >
-                <Badge
-                  status={ckStatus.connected ? 'success' : 'error'}
-                  text={
-                    <span style={{ fontSize: 13, fontWeight: 500 }}>
-                      {ckStatus.connected ? 'ClickHouse 在线' : 'ClickHouse 断开'}
-                    </span>
-                  }
-                />
-              </div>
-            </Tooltip>
-
-            {/* Dark / Light Toggle */}
-            <Button
-              type="text"
-              icon={darkMode ? <SunOutlined /> : <MoonOutlined />}
-              onClick={onToggleTheme}
-              title={darkMode ? '切换为亮色模式' : '切换为暗色模式'}
-            />
-
-            {/* User Dropdown */}
+            <div className="theme-switch" role="group" aria-label="主题模式">
+              <button className={!darkMode ? 'active' : ''} onClick={() => { if (darkMode) onToggleTheme(); }} aria-label="亮色模式" aria-pressed={!darkMode}><SunOutlined /></button>
+              <button className={darkMode ? 'active' : ''} onClick={() => { if (!darkMode) onToggleTheme(); }} aria-label="暗色模式" aria-pressed={darkMode}><MoonOutlined /></button>
+            </div>
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <Button type="text" style={{ height: 40 }}>
-                <Space>
-                  <UserOutlined />
-                  <span style={{ fontWeight: 600 }}>{username}</span>
-                </Space>
+              <Button className="user-button" type="text">
+                <span className="user-copy"><strong>Hey, {username}</strong><small>管理员</small></span>
+                <span className="user-avatar">{username.slice(0, 1).toUpperCase()}</span>
+                <DownOutlined className="user-chevron" />
               </Button>
             </Dropdown>
-          </Space>
+          </div>
         </Header>
 
-        {/* Global Alert if DB disconnected */}
+        <div className="workspace-bar">
+          <span>数据分析控制台 <span className="workspace-divider">/</span> <span className="workspace-subtitle">Access Log Analytics</span></span>
+          <Tooltip title={ckStatus.connected
+            ? `ClickHouse 已连接 (版本: ${ckStatus.version}, 延迟: ${ckStatus.latency}ms)`
+            : 'ClickHouse 未连接，点击前往设置面板配置'}>
+            <button className="database-status" onClick={() => navigate('/settings')}>
+              <Badge status={ckStatus.connected ? 'success' : 'error'} />
+              ClickHouse {ckStatus.connected ? '已连接' : '未连接'}
+              {ckStatus.connected && <span>{ckStatus.latency} ms</span>}
+            </button>
+          </Tooltip>
+        </div>
+
         {!ckStatus.connected && (
-          <Alert
+          <Alert className="connection-alert"
             message="ClickHouse 数据库未连接"
-            description="当前无法从 ClickHouse 加载访问日志，请前往「数据库与系统设置」配置并测试连接地址。"
-            type="warning"
-            showIcon
-            action={
-              <Button size="small" type="primary" onClick={() => navigate('/settings')}>
-                立即配置
-              </Button>
-            }
-            banner
+            description="请配置并测试数据库连接，以加载访问日志。"
+            type="warning" showIcon
+            action={<Button size="small" onClick={() => navigate('/settings')}>立即配置</Button>}
           />
         )}
 
-        <Content
-          style={{
-            margin: '16px 20px',
-            minHeight: 280,
-          }}
-        >
-          <Outlet />
+        <Content className="app-content">
+          <div className="page-enter" key={location.pathname}><Outlet /></div>
+          <footer className="app-footer"><span>Access Analytics</span><span>让数据清晰，让分析简单。</span></footer>
         </Content>
       </Layout>
     </Layout>

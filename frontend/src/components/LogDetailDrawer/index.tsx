@@ -41,7 +41,7 @@ export const LogDetailDrawer: React.FC<LogDetailDrawerProps> = ({ open, onClose,
       <Descriptions bordered column={1} size="small">
         <Descriptions.Item label="展示时间 (UTC+8)">
           <Space>
-            <span style={{ fontWeight: 600, color: '#1677ff' }}>{log.time_local}</span>
+            <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{log.time_local}</span>
             <Button
               type="text"
               size="small"
@@ -53,7 +53,7 @@ export const LogDetailDrawer: React.FC<LogDetailDrawerProps> = ({ open, onClose,
 
         <Descriptions.Item label="原始时间 (UTC+0)">
           <Space>
-            <span style={{ color: '#8c8c8c', fontFamily: 'monospace' }}>{log.time_utc}</span>
+            <span style={{ color: 'var(--muted)', fontFamily: 'monospace' }}>{log.time_utc}</span>
             <Button
               type="text"
               size="small"
@@ -103,7 +103,7 @@ export const LogDetailDrawer: React.FC<LogDetailDrawerProps> = ({ open, onClose,
       </Descriptions>
 
       <Divider />
-      <div style={{ color: '#8c8c8c', fontSize: 12 }}>
+      <div style={{ color: 'var(--muted)', fontSize: 12 }}>
         💡 提示：点击 UID、Host、IP、节点标签可直接下钻进入对应的专属画像与分析页面。
       </div>
     </Drawer>

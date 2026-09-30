@@ -147,6 +147,7 @@ func main() {
 
 			// Audit Logs
 			protected.GET("/audit/logs", auditHandler.GetAuditLogs)
+			protected.DELETE("/audit/logs", auditHandler.ClearAuditLogs)
 		}
 	}
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Typography, Tag } from 'antd';
-import { SafetyCertificateOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Space, Typography, Tag, Popconfirm, message } from 'antd';
+import { SafetyCertificateOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { auditApi } from '../../api/index.ts';
 import { AuditLogEntry } from '../../api/types.ts';
 
@@ -8,6 +8,7 @@ const { Title } = Typography;
 
 export const AuditLogs: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [data, setData] = useState<AuditLogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -30,6 +31,25 @@ export const AuditLogs: React.FC = () => {
     loadData();
   }, [page, pageSize]);
 
+  const handleClear = async () => {
+    setClearing(true);
+    try {
+      await auditApi.clearLogs();
+      setData([]);
+      setTotal(0);
+      message.success('审计日志已清空');
+      if (page === 1) {
+        await loadData();
+      } else {
+        setPage(1);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setClearing(false);
+    }
+  };
+
   const getActionColor = (action: string) => {
     switch (action) {
       case 'QUERY_LOGS':
@@ -37,7 +57,7 @@ export const AuditLogs: React.FC = () => {
       case 'QUERY_UID':
         return 'cyan';
       case 'QUERY_HOST':
-        return 'purple';
+        return 'cyan';
       case 'QUERY_IP':
         return 'green';
       case 'EXPORT_CSV':
@@ -101,20 +121,34 @@ export const AuditLogs: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Title */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <Title level={4} style={{ margin: 0 }}>
-            <SafetyCertificateOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+            <SafetyCertificateOutlined style={{ color: 'var(--teal)', marginRight: 8 }} />
             管理员查询审计日志
           </Title>
-          <div style={{ color: '#8c8c8c', fontSize: 13, marginTop: 2 }}>
+          <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
             自动追踪记录管理员何时查询了哪位用户 UID、哪个 Host 域名、哪段 IP 以及 CSV 导出操作
           </div>
         </div>
 
-        <Button icon={<ReloadOutlined />} onClick={loadData} loading={loading}>
-          刷新
-        </Button>
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={loadData} loading={loading} disabled={clearing}>
+            刷新
+          </Button>
+          <Popconfirm
+            title="清空全部审计日志？"
+            description="清空后无法恢复，不影响 ClickHouse 中的访问日志。"
+            onConfirm={handleClear}
+            okText="确认清空"
+            cancelText="取消"
+            okButtonProps={{ danger: true, loading: clearing }}
+          >
+            <Button danger icon={<DeleteOutlined />} loading={clearing} disabled={loading || total === 0}>
+              清空日志
+            </Button>
+          </Popconfirm>
+        </Space>
       </div>
 
       <Card bordered={false}>
@@ -127,6 +161,7 @@ export const AuditLogs: React.FC = () => {
             current: page,
             pageSize,
             total,
+            disabled: clearing,
             showSizeChanger: true,
             pageSizeOptions: ['20', '50', '100'],
             onChange: (p, ps) => {

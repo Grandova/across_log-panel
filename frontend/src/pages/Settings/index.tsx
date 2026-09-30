@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card,
+  Row,
+  Col,
   Form,
   Input,
   InputNumber,
@@ -20,6 +22,8 @@ import {
   ApiOutlined,
   SaveOutlined,
   ReloadOutlined,
+  LockOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { settingsApi } from '../../api/index.ts';
 import { ClickHouseConfig, ClickHouseConfigResponse } from '../../api/types.ts';
@@ -118,176 +122,171 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 960 }}>
-      {/* Title */}
-      <div>
-        <Title level={4} style={{ margin: 0 }}>
-          <DatabaseOutlined style={{ color: '#1677ff', marginRight: 8 }} />
-          ClickHouse 数据库连接配置
-        </Title>
-        <div style={{ color: '#8c8c8c', fontSize: 13, marginTop: 2 }}>
-          在此手动配置或修改 ClickHouse 数据库连接地址，支持 HTTP (8123) 与 Native (9000) 协议热重载，无需重启后台服务
-        </div>
+    <div className="settings-page">
+      <div className="settings-heading">
+        <Title level={2}>数据库设置</Title>
+        <p>管理 ClickHouse 连接与认证信息，保存后即时生效。</p>
       </div>
+      <div className="settings-grid">
+        <Card className="connection-card" bordered={false}>
+          <div className="connection-profile">
+            <span className="connection-logo"><DatabaseOutlined /></span>
+            <Title level={3}>ClickHouse</Title>
+            <Badge status={currentConfig?.connected ? 'success' : 'error'} text={currentConfig?.connected ? '数据库已连接' : '数据库未连接'} />
+          </div>
+          <Divider />
+          <div className="connection-heading"><strong>连接概况</strong><Button type="text" icon={<ReloadOutlined />} onClick={loadSettings} loading={loading} aria-label="刷新连接状态" /></div>
+          <Descriptions layout="vertical" column={1} size="small" colon={false}>
+            <Descriptions.Item label="当前协议与地址">
+              <span style={{ fontFamily: 'monospace' }}>
+                {currentConfig?.protocol?.toUpperCase()}://{currentConfig?.host}:{currentConfig?.port}
+              </span>
+            </Descriptions.Item>
+            <Descriptions.Item label="目标数据库">
+              <span style={{ fontFamily: 'monospace' }}>{currentConfig?.database}</span>
+            </Descriptions.Item>
+            <Descriptions.Item label="用户名">
+              <span style={{ fontFamily: 'monospace' }}>{currentConfig?.username}</span>
+            </Descriptions.Item>
+            <Descriptions.Item label="服务器版本">
+              {currentConfig?.version || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="通信延迟">
+              {currentConfig?.connected ? `${currentConfig?.latency_ms} ms` : '-'}
+            </Descriptions.Item>
+          </Descriptions>
 
-      {/* Current Status Card */}
-      <Card bordered={false} title="当前数据库连接状态" extra={<Button icon={<ReloadOutlined />} size="small" onClick={loadSettings} loading={loading}>刷新状态</Button>}>
-        <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} size="small">
-          <Descriptions.Item label="连接状态">
-            <Badge
-              status={currentConfig?.connected ? 'success' : 'error'}
-              text={
-                <span style={{ fontWeight: 600 }}>
-                  {currentConfig?.connected ? '已连接 (Online)' : '断开 / 未连接'}
-                </span>
-              }
+          {currentConfig?.last_error && !currentConfig?.connected && (
+            <Alert
+              style={{ marginTop: 16 }}
+              type="error"
+              showIcon
+              message="ClickHouse 最近连接报错"
+              description={<pre style={{ margin: 0, fontSize: 12 }}>{currentConfig.last_error}</pre>}
             />
-          </Descriptions.Item>
-          <Descriptions.Item label="当前协议与地址">
-            <span style={{ fontFamily: 'monospace' }}>
-              {currentConfig?.protocol?.toUpperCase()}://{currentConfig?.host}:{currentConfig?.port}
-            </span>
-          </Descriptions.Item>
-          <Descriptions.Item label="目标数据库">
-            <span style={{ fontFamily: 'monospace' }}>{currentConfig?.database}</span>
-          </Descriptions.Item>
-          <Descriptions.Item label="用户名">
-            <span style={{ fontFamily: 'monospace' }}>{currentConfig?.username}</span>
-          </Descriptions.Item>
-          <Descriptions.Item label="服务器版本">
-            {currentConfig?.version || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="通信延迟">
-            {currentConfig?.connected ? `${currentConfig?.latency_ms} ms` : '-'}
-          </Descriptions.Item>
-        </Descriptions>
+          )}
+        </Card>
 
-        {currentConfig?.last_error && !currentConfig?.connected && (
-          <Alert
-            style={{ marginTop: 16 }}
-            type="error"
-            showIcon
-            message="ClickHouse 最近连接报错"
-            description={<pre style={{ margin: 0, fontSize: 12 }}>{currentConfig.last_error}</pre>}
-          />
-        )}
-      </Card>
-
-      {/* Configuration Form Card */}
-      <Card bordered={false} title="修改 ClickHouse 连接参数">
-        <Form form={form} layout="vertical" onFinish={handleSave}>
-          <Form.Item
-            name="protocol"
-            label="连接协议"
-            rules={[{ required: true, message: '请选择连接协议' }]}
-            extra="推荐使用 HTTP 协议连接 8123 端口；若使用 ClickHouse 原生 TCP 协议请选择 Native 并使用 9000 端口"
-          >
-            <Select
-              options={[
-                { value: 'http', label: 'HTTP 协议 (默认端口 8123，推荐)' },
-                { value: 'native', label: 'Native 原生 TCP 协议 (默认端口 9000)' },
-              ]}
-              onChange={(val) => {
-                if (val === 'http' && form.getFieldValue('port') === 9000) {
-                  form.setFieldValue('port', 8123);
-                } else if (val === 'native' && form.getFieldValue('port') === 8123) {
-                  form.setFieldValue('port', 9000);
-                }
-              }}
-            />
-          </Form.Item>
-
-          <Space size="large" style={{ display: 'flex', width: '100%' }}>
+        <Card className="settings-form-card" bordered={false}>
+          <Form form={form} layout="vertical" onFinish={handleSave}>
+            <div className="form-section-heading"><span className="section-icon section-blue"><ApiOutlined /></span><div><h3>连接参数</h3><p>配置数据库的访问地址与协议</p></div></div>
             <Form.Item
-              name="host"
-              label="主机地址 (Host)"
-              rules={[{ required: true, message: '请输入 ClickHouse 主机地址' }]}
-              style={{ flex: 3 }}
+              name="protocol"
+              label="连接协议"
+              rules={[{ required: true, message: '请选择连接协议' }]}
+              extra="HTTP 默认端口 8123；Native 默认端口 9000。"
             >
-              <Input placeholder="例如 127.0.0.1 或 远程服务器 IP / 域名" />
+              <Select
+                options={[
+                  { value: 'http', label: 'HTTP 协议 (默认端口 8123，推荐)' },
+                  { value: 'native', label: 'Native 原生 TCP 协议 (默认端口 9000)' },
+                ]}
+                onChange={(val) => {
+                  if (val === 'http' && form.getFieldValue('port') === 9000) {
+                    form.setFieldValue('port', 8123);
+                  } else if (val === 'native' && form.getFieldValue('port') === 8123) {
+                    form.setFieldValue('port', 9000);
+                  }
+                }}
+              />
             </Form.Item>
 
-            <Form.Item
-              name="port"
-              label="端口 (Port)"
-              rules={[{ required: true, message: '请输入端口号' }]}
-              style={{ flex: 1 }}
-            >
-              <InputNumber style={{ width: '100%' }} placeholder="8123" min={1} max={65535} />
-            </Form.Item>
-          </Space>
+            <Row gutter={24} align="top">
+              <Col xs={24} sm={16}>
+                <Form.Item
+                  name="host"
+                  label="主机地址 (Host)"
+                  rules={[{ required: true, message: '请输入 ClickHouse 主机地址' }]}
+                >
+                  <Input placeholder="例如 127.0.0.1 或 远程服务器 IP / 域名" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={8}>
+                <Form.Item
+                  name="port"
+                  label="端口 (Port)"
+                  rules={[{ required: true, message: '请输入端口号' }]}
+                >
+                  <InputNumber style={{ width: '100%' }} placeholder="8123" min={1} max={65535} />
+                </Form.Item>
+              </Col>
+            </Row>
 
-          <Form.Item
-            name="database"
-            label="数据库名称 (Database)"
-            rules={[{ required: true, message: '请输入数据库名' }]}
-            initialValue="default"
-          >
-            <Input placeholder="default" />
-          </Form.Item>
-
-          <Space size="large" style={{ display: 'flex', width: '100%' }}>
             <Form.Item
-              name="username"
-              label="数据库用户名 (Username)"
-              rules={[{ required: true, message: '请输入用户名' }]}
-              style={{ flex: 1 }}
+              name="database"
+              label="数据库名称 (Database)"
+              rules={[{ required: true, message: '请输入数据库名' }]}
               initialValue="default"
             >
               <Input placeholder="default" />
             </Form.Item>
 
+            <Divider />
+            <div className="form-section-heading"><span className="section-icon section-green"><LockOutlined /></span><div><h3>账户与安全</h3><p>设置数据库认证信息及传输方式</p></div></div>
+            <Row gutter={24} align="top">
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="username"
+                  label="数据库用户名 (Username)"
+                  rules={[{ required: true, message: '请输入用户名' }]}
+                  initialValue="default"
+                >
+                  <Input prefix={<UserOutlined />} placeholder="default" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="password"
+                  label="数据库密码 (Password)"
+                  extra={currentConfig?.has_password ? '当前已设置密码。留空则保持现有密码不变' : '无密码留空即可'}
+                >
+                  <Input.Password prefix={<LockOutlined />} placeholder="留空保持现有密码" />
+                </Form.Item>
+              </Col>
+            </Row>
+
             <Form.Item
-              name="password"
-              label="数据库密码 (Password)"
-              style={{ flex: 1 }}
-              extra={currentConfig?.has_password ? '当前已设置密码。留空则保持现有密码不变' : '无密码留空即可'}
+              name="secure"
+              label="启用 TLS / HTTPS 加密传输"
+              valuePropName="checked"
+              extra="若 ClickHouse 启用了 HTTPS / SSL 证书，请开启此项"
             >
-              <Input.Password placeholder="输入新密码 (留空则不修改现有密码)" />
+              <Switch />
             </Form.Item>
-          </Space>
 
-          <Form.Item
-            name="secure"
-            label="启用 TLS / HTTPS 加密传输"
-            valuePropName="checked"
-            extra="若 ClickHouse 启用了 HTTPS / SSL 证书，请开启此项"
-          >
-            <Switch />
-          </Form.Item>
+            {testResult && (
+              <Alert
+                type={testResult.success ? 'success' : 'error'}
+                showIcon
+                style={{ marginBottom: 16 }}
+                message={testResult.success ? '测试连接成功' : '测试连接失败'}
+                description={testResult.message}
+              />
+            )}
 
-          {testResult && (
-            <Alert
-              type={testResult.success ? 'success' : 'error'}
-              showIcon
-              style={{ marginBottom: 16 }}
-              message={testResult.success ? '测试连接成功' : '测试连接失败'}
-              description={testResult.message}
-            />
-          )}
+            <Divider />
 
-          <Divider />
-
-          <Space size="middle">
-            <Button
-              type="default"
-              icon={<ApiOutlined />}
-              onClick={handleTest}
-              loading={testing}
-            >
-              测试连接 (不保存)
-            </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              onClick={handleSave}
-              loading={saving}
-            >
-              保存并应用新配置
-            </Button>
-          </Space>
-        </Form>
-      </Card>
+            <Space className="settings-actions" wrap size="middle">
+              <Button
+                type="default"
+                icon={<ApiOutlined />}
+                onClick={handleTest}
+                loading={testing}
+              >
+                测试连接 (不保存)
+              </Button>
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={handleSave}
+                loading={saving}
+              >
+                保存并应用新配置
+              </Button>
+            </Space>
+          </Form>
+        </Card>
+      </div>
     </div>
   );
 };

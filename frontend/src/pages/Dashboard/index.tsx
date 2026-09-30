@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Statistic, Table, Button, Space, Typography, Skeleton } from 'antd';
+import { Card, Statistic, Table, Button, Typography, Skeleton, Empty, theme } from 'antd';
 import {
   FireOutlined,
   UserOutlined,
@@ -8,6 +8,7 @@ import {
   EyeOutlined,
   ReloadOutlined,
   ArrowRightOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
 import { useNavigate } from 'react-router-dom';
@@ -35,6 +36,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
   });
 
   const navigate = useNavigate();
+  const { token } = theme.useToken();
 
   const loadData = async () => {
     setLoading(true);
@@ -67,35 +69,48 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
     loadData();
   }, [timeRange]);
 
-  // ECharts options for Trend
   const getTrendChartOption = () => {
     const xData = trendPoints.map((p) => p.bucket_local);
     const reqData = trendPoints.map((p) => p.requests);
     const userData = trendPoints.map((p) => p.users);
 
     return {
+      animationDuration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 700,
+      animationDurationUpdate: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450,
+      animationEasing: 'cubicOut',
+      textStyle: { fontFamily: token.fontFamily },
       tooltip: {
+        backgroundColor: token.colorBgElevated,
+        borderColor: token.colorBorderSecondary,
+        textStyle: { color: token.colorText },
         trigger: 'axis',
         axisPointer: { type: 'cross' },
       },
       legend: {
         data: ['访问请求数 (PV)', '活跃用户数 (UV)'],
         top: 0,
-        textStyle: { color: darkMode ? '#e0e0e0' : '#333' },
+        right: 0,
+        icon: 'circle',
+        itemWidth: 8,
+        itemHeight: 8,
+        itemGap: 16,
+        textStyle: { color: token.colorTextSecondary, fontSize: 11 },
       },
       grid: {
         left: '2%',
         right: '3%',
         bottom: '8%',
-        top: '12%',
+        top: '20%',
         containLabel: true,
       },
       xAxis: {
         type: 'category',
         data: xData,
         boundaryGap: false,
+        axisLine: { show: false },
+        axisTick: { show: false },
         axisLabel: {
-          color: darkMode ? '#a0a0a0' : '#666',
+          color: token.colorTextSecondary,
           rotate: xData.length > 20 ? 30 : 0,
         },
       },
@@ -103,13 +118,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
         {
           type: 'value',
           name: '请求数',
-          axisLabel: { color: darkMode ? '#a0a0a0' : '#666' },
-          splitLine: { lineStyle: { color: darkMode ? '#333' : '#f0f0f0' } },
+          axisLabel: { color: token.colorTextSecondary },
+          splitLine: { lineStyle: { color: token.colorBorderSecondary, type: 'dashed' } },
         },
         {
           type: 'value',
           name: '用户数',
-          axisLabel: { color: darkMode ? '#a0a0a0' : '#666' },
+          axisLabel: { color: token.colorTextSecondary },
           splitLine: { show: false },
         },
       ],
@@ -120,7 +135,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
           smooth: true,
           showSymbol: false,
           data: reqData,
-          itemStyle: { color: '#1677ff' },
+          lineStyle: { width: 3 },
+          itemStyle: { color: darkMode ? '#8db5df' : '#6c9bcf' },
           areaStyle: {
             color: {
               type: 'linear',
@@ -129,8 +145,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: 'rgba(22, 119, 255, 0.4)' },
-                { offset: 1, color: 'rgba(22, 119, 255, 0.02)' },
+                { offset: 0, color: 'rgba(25, 118, 210, 0.16)' },
+                { offset: 1, color: 'rgba(25, 118, 210, 0.01)' },
               ],
             },
           },
@@ -142,7 +158,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
           smooth: true,
           showSymbol: false,
           data: userData,
-          itemStyle: { color: '#52c41a' },
+          lineStyle: { width: 3 },
+          itemStyle: { color: '#1b9c85' },
         },
       ],
     };
@@ -155,22 +172,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
       key: 'rank',
       width: 65,
       render: (r: number) => (
-        <span
-          style={{
-            display: 'inline-block',
-            width: 24,
-            height: 24,
-            borderRadius: '50%',
-            textAlign: 'center',
-            lineHeight: '24px',
-            fontWeight: 'bold',
-            fontSize: 12,
-            backgroundColor: r === 1 ? '#ff4d4f' : r === 2 ? '#fa8c16' : r === 3 ? '#faad14' : 'transparent',
-            color: r <= 3 ? '#fff' : 'inherit',
-          }}
-        >
-          {r}
-        </span>
+        <span className={`rank-badge${r <= 3 ? ' rank-top' : ''}`}>{String(r).padStart(2, '0')}</span>
       ),
     },
     {
@@ -215,154 +217,62 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
     },
   ];
 
-  const nodeColumns = [
-    {
-      title: '节点 ID',
-      dataIndex: 'node_id',
-      key: 'node_id',
-      render: (id: number) => <NodeTag nodeId={id} />,
-    },
-    {
-      title: '总请求量',
-      dataIndex: 'requests',
-      key: 'requests',
-      render: (v: number) => <span style={{ fontWeight: 600 }}>{formatNumber(v)}</span>,
-    },
-    {
-      title: '服务 UID',
-      dataIndex: 'users',
-      key: 'users',
-      render: (v: number) => formatNumber(v),
-    },
-    {
-      title: '客户端 IP',
-      dataIndex: 'ips',
-      key: 'ips',
-      render: (v: number) => formatNumber(v),
-    },
-  ];
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Top Bar: Title & Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+    <div className="dashboard-page">
+      <div className="dashboard-heading">
         <div>
-          <Title level={4} style={{ margin: 0 }}>
-            实时访问大盘
-          </Title>
-          <div style={{ color: '#8c8c8c', fontSize: 13, marginTop: 2 }}>
-            基于 ClickHouse 高性能检索，全链路实时分析
-          </div>
+          <Title level={2}>访问数据总览</Title>
+          <p>访问统计 / 用户活跃 / 节点分析</p>
         </div>
-
-        <Space wrap>
-          <TimeRangeSelector value={timeRange} onChange={(range) => setTimeRange(range)} />
-          <Button icon={<ReloadOutlined />} onClick={loadData} loading={loading}>
-            刷新
-          </Button>
-        </Space>
+        <Button className="refresh-button" icon={<ReloadOutlined />} onClick={loadData} loading={loading}>刷新数据</Button>
       </div>
 
-      {/* KPI Cards */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={8} lg={4} xl={4} style={{ minWidth: 200, flex: 1 }}>
-          <Card bordered={false} hoverable>
-            {loading && !overview ? (
-              <Skeleton active paragraph={{ rows: 1 }} />
-            ) : (
-              <Statistic
-                title="今日访问总记录"
-                value={overview?.total_requests || 0}
-                prefix={<FireOutlined style={{ color: '#ff4d4f' }} />}
-                formatter={(v) => formatNumber(Number(v))}
-              />
-            )}
-          </Card>
-        </Col>
+      <div className="dashboard-grid">
+        <div className="dashboard-main">
+          <div className="metrics-grid">
+            {[
+              { title: '今日访问请求', value: overview?.total_requests, icon: <FireOutlined />, color: 'green' },
+              { title: '今日活跃用户', value: overview?.active_users, icon: <UserOutlined />, color: 'red' },
+              { title: '今日独立 IP', value: overview?.unique_ips, icon: <GlobalOutlined />, color: 'blue' },
+            ].map((item) => (
+              <Card key={item.title} className={`metric-card metric-${item.color}`} bordered={false}>
+                {loading && !overview ? <Skeleton active paragraph={{ rows: 1 }} /> : (
+                  <Statistic title={item.title} value={item.value || 0} formatter={(v) => formatNumber(Number(v))} />
+                )}
+                <div className="metric-ring" aria-hidden="true">
+                  <svg viewBox="0 0 90 90"><circle cx="45" cy="45" r="36" pathLength="100" /></svg>
+                  <span>{item.icon}</span>
+                </div>
+              </Card>
+            ))}
+          </div>
 
-        <Col xs={24} sm={12} md={8} lg={4} xl={4} style={{ minWidth: 200, flex: 1 }}>
-          <Card bordered={false} hoverable>
-            {loading && !overview ? (
-              <Skeleton active paragraph={{ rows: 1 }} />
-            ) : (
-              <Statistic
-                title="今日活跃 UID"
-                value={overview?.active_users || 0}
-                prefix={<UserOutlined style={{ color: '#1677ff' }} />}
-                formatter={(v) => formatNumber(Number(v))}
-              />
-            )}
-          </Card>
-        </Col>
+          <div className="dashboard-toolbar">
+            <div><span className="section-indicator" />访问分析</div>
+            <TimeRangeSelector value={timeRange} onChange={(range) => setTimeRange(range)} />
+          </div>
 
-        <Col xs={24} sm={12} md={8} lg={4} xl={4} style={{ minWidth: 200, flex: 1 }}>
-          <Card bordered={false} hoverable>
-            {loading && !overview ? (
-              <Skeleton active paragraph={{ rows: 1 }} />
-            ) : (
-              <Statistic
-                title="今日独立用户 IP"
-                value={overview?.unique_ips || 0}
-                prefix={<GlobalOutlined style={{ color: '#13c2c2' }} />}
-                formatter={(v) => formatNumber(Number(v))}
-              />
-            )}
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} md={8} lg={4} xl={4} style={{ minWidth: 200, flex: 1 }}>
-          <Card bordered={false} hoverable>
-            {loading && !overview ? (
-              <Skeleton active paragraph={{ rows: 1 }} />
-            ) : (
-              <Statistic
-                title="今日访问 Host 数量"
-                value={overview?.total_hosts || 0}
-                prefix={<GlobalOutlined style={{ color: '#722ed1' }} />}
-                formatter={(v) => formatNumber(Number(v))}
-              />
-            )}
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} md={8} lg={4} xl={4} style={{ minWidth: 200, flex: 1 }}>
-          <Card bordered={false} hoverable>
-            {loading && !overview ? (
-              <Skeleton active paragraph={{ rows: 1 }} />
-            ) : (
-              <Statistic
-                title="今日服务节点数"
-                value={overview?.total_nodes || 0}
-                prefix={<ClusterOutlined style={{ color: '#fa8c16' }} />}
-                formatter={(v) => formatNumber(Number(v))}
-              />
-            )}
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Trend Line Chart */}
-      <Card
-        title="访问量与活跃用户趋势 (动态时间聚合)"
-        bordered={false}
-        extra={
-          <span style={{ fontSize: 12, color: '#8c8c8c' }}>
-            根据所选时间范围自动按 5分钟/1小时/1天 划分时隙
-          </span>
-        }
-      >
-        {loading && trendPoints.length === 0 ? (
-          <Skeleton active paragraph={{ rows: 8 }} />
-        ) : (
-          <ReactECharts option={getTrendChartOption()} style={{ height: 350, width: '100%' }} />
-        )}
-      </Card>
-
-      {/* Host Top 20 & Node Top 10 */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
           <Card
-            title="Host 访问 Top 20 排行"
+            className="trend-card"
+            title={<div className="card-heading">访问趋势<span>请求量与活跃用户随时间的变化</span></div>}
+            bordered={false}
+            extra={
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                按所选时间范围自动聚合
+              </span>
+            }
+          >
+            {loading && trendPoints.length === 0 ? (
+              <Skeleton active paragraph={{ rows: 8 }} />
+            ) : trendPoints.length === 0 ? (
+              <div className="chart-empty"><Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="当前时间范围暂无访问数据" /></div>
+            ) : (
+              <ReactECharts option={getTrendChartOption()} style={{ height: 310, width: '100%' }} />
+            )}
+          </Card>
+
+          <Card
+            title={<div className="card-heading">热门访问域名<span>HOST RANKING · TOP 20</span></div>}
             bordered={false}
             extra={
               <Button type="link" onClick={() => navigate('/hosts/ranking')}>
@@ -376,14 +286,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
               rowKey="host"
               pagination={false}
               size="middle"
+              scroll={{ x: 'max-content' }}
               loading={loading}
             />
           </Card>
-        </Col>
-
-        <Col xs={24} lg={8}>
+        </div>
+        <aside className="dashboard-rail">
+          <Card className="analytics-profile" bordered={false}>
+            <div className="profile-emblem"><DatabaseOutlined /></div>
+            <Title level={3}>Access<span>Log</span></Title>
+            <p>用户访问日志分析</p>
+            <Button type="link" onClick={() => navigate('/settings')}>管理数据连接 <ArrowRightOutlined /></Button>
+          </Card>
+          <h3 className="rail-heading">网络概况</h3>
+          <Card className="network-metric" bordered={false}>
+            <span className="section-icon section-green"><GlobalOutlined /></span>
+            <Statistic title="今日访问域名" value={overview?.total_hosts || 0} formatter={(v) => formatNumber(Number(v))} />
+          </Card>
+          <Card className="network-metric" bordered={false}>
+            <span className="section-icon section-red"><ClusterOutlined /></span>
+            <Statistic title="今日服务节点" value={overview?.total_nodes || 0} formatter={(v) => formatNumber(Number(v))} />
+          </Card>
           <Card
-            title="节点负载排行 (Top 10)"
+            title={<div className="card-heading">节点负载排行<span>NODE RANKING · TOP 10</span></div>}
             bordered={false}
             extra={
               <Button type="link" onClick={() => navigate('/nodes')}>
@@ -391,17 +316,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ darkMode }) => {
               </Button>
             }
           >
-            <Table
-              dataSource={topNodes}
-              columns={nodeColumns}
-              rowKey="node_id"
-              pagination={false}
-              size="middle"
-              loading={loading}
-            />
+            {loading && topNodes.length === 0 ? <Skeleton active /> : topNodes.length === 0 ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} /> : (
+              <div className="node-ranking">
+                {topNodes.map((node, index) => (
+                  <div className="node-ranking-row" key={node.node_id}>
+                    <span className="node-rank">{String(index + 1).padStart(2, '0')}</span>
+                    <div><NodeTag nodeId={node.node_id} /><small>{formatNumber(node.users)} 用户 · {formatNumber(node.ips)} IP</small></div>
+                    <strong>{formatNumber(node.requests)}<small>请求</small></strong>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
-        </Col>
-      </Row>
+        </aside>
+      </div>
     </div>
   );
 };
