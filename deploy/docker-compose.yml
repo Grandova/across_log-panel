@@ -1,0 +1,23 @@
+services:
+  access-log-analytics:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: access-log-analytics
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - CLICKHOUSE_PROTOCOL=http
+      - CLICKHOUSE_HOST=host.docker.internal
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_DATABASE=default
+      - CLICKHOUSE_USERNAME=default
+      - CLICKHOUSE_PASSWORD=
+      - APP_TIMEZONE=Asia/Shanghai
+    volumes:
+      - ../data:/app/data
+      - ../.env:/app/.env:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

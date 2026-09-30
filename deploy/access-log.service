@@ -1,0 +1,18 @@
+[Unit]
+Description=Access Log Analytics Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/access-log-analytics
+ExecStart=/opt/access-log-analytics/server
+Restart=always
+RestartSec=5s
+EnvironmentFile=-/opt/access-log-analytics/.env
+
+# Security limits
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
