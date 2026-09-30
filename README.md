@@ -19,10 +19,10 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Grandova/across_log-pane
 > - 自动注册并启动 `systemd` 后台守护服务 `access-log-analytics`（开机自启、崩溃自动重启）；
 > - 安装便捷终端管理命令 `access-log`。
 
-首次安装会创建 `/opt/across_log-panel/.env` 并暂停。填写其中的 `ADMIN_USER` 和 `ADMIN_PASSWORD` 后重新运行安装命令。系统没有通用默认密码。
+首次安装会在终端询问管理员用户名、新密码及确认密码，输入密码时不回显。无需手动编辑配置文件；密码仅以 Bcrypt 哈希保存。已有安装会询问是否修改账号，直接回车保留原账号和数据库配置。系统没有通用默认密码。
 
 安装完成后直接访问：
-- **Web 访问地址**：`http://服务器IP:8080`
+- **Web 访问地址**：安装完成后分别显示本机、局域网、公网 IPv4 / IPv6 地址，端口使用实际配置值（默认 8080）。无法探测的地址会明确显示“未检测到”。
 - **管理员登录**：使用首次安装时自行配置的账号与密码；登录后可在「系统设置 → 管理员账号」修改。
 - **ClickHouse 配置**：登录后点击左侧菜单 **「系统设置」**，填写您的 ClickHouse 8123 端口地址，点击测试连接并保存即可！
 
@@ -30,16 +30,19 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Grandova/across_log-pane
 
 ## 🔄 一键平滑更新 / 升级
 
-如果已有运行中的版本，需要升级到最新代码，无需重新配置环境，直接执行以下单行命令即可平滑热替换：
+升级时重新执行安装命令，同时更新主程序和 `access-log` 管理菜单。账号修改提示处直接回车即可保留现有账号：
 
 ```bash
-systemctl stop access-log-analytics && curl -fSL https://raw.githubusercontent.com/Grandova/across_log-panel/main/bin/access-log-analytics-linux-amd64 -o /usr/local/bin/access-log-analytics && chmod +x /usr/local/bin/access-log-analytics && systemctl start access-log-analytics
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Grandova/across_log-panel/main/install.sh)"
 ```
 
 ---
 
 ### 快捷管理命令
 ```bash
+access-log            # 打开交互式管理菜单
+access-log account    # 修改/重设管理员用户名和密码（root 权限）
+access-log address    # 显示局域网和公网访问地址
 access-log status     # 查看当前运行状态
 access-log restart    # 重启面板服务
 access-log logs       # 实时跟踪运行日志
@@ -48,6 +51,14 @@ access-log start      # 启动面板服务
 access-log config     # 编辑环境配置文件
 access-log uninstall  # 卸载面板服务
 ```
+
+### 修改管理员账号或密码
+
+- **终端**：运行 `access-log account`，输入新的用户名和密码并确认。此命令需要 root 权限，可用于忘记登录密码时重设账号；不需要旧密码。正在运行的服务会短暂停止，保存后自动启动，数据库配置保持不变。
+- **网页**：进入「系统设置 → 管理员账号」，验证当前密码后保存。新密码留空可只修改用户名。
+- 两种方式都会使旧登录失效，重启后仍使用新账号。密码需要 8–72 字节，终端不会打印或回显密码。
+
+运行 `access-log address` 可重新查询访问地址。公网 IP 探测失败不会阻止安装；公网访问仍需放行配置端口，NAT 环境还需设置端口转发。
 
 ---
 
@@ -163,7 +174,7 @@ CLICKHOUSE_SECURE=false
 APP_TIMEZONE=Asia/Shanghai
 ```
 
-> **账号设置**：首次启动必须填写 `ADMIN_USER` 和 `ADMIN_PASSWORD`；初始化后只持久化密码哈希，可删除 `.env` 中的 `ADMIN_PASSWORD`。后台修改账号会立即使所有旧登录失效，重启后仍使用已保存的新账号。`data/config.json` 含私有配置，请勿上传或公开。
+> **账号设置**：一键安装通过终端交互设置账号。手动或 Docker 部署首次启动时填写 `ADMIN_USER` 和 `ADMIN_PASSWORD`；初始化后只持久化密码哈希，可删除 `.env` 中的 `ADMIN_PASSWORD`。后台修改账号会立即使所有旧登录失效，重启后仍使用已保存的新账号。`data/config.json` 含私有配置，请勿上传或公开。
 
 > **提示**：除了直接编辑 `.env` 文件，您可以在登录 Web 面板后，在 **「系统设置」** 界面直接进行可视化修改并一键测试连通性，保存后即刻热生效。
 

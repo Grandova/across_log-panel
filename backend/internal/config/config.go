@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 
 	"access-log-analytics/internal/model"
@@ -25,6 +26,11 @@ var (
 
 // InitConfig loads configuration from .env and data/config.json
 func InitConfig() (*model.AppConfig, error) {
+	return LoadConfig(true)
+}
+
+// LoadConfig(false) lets local commands read settings without overwriting a running service.
+func LoadConfig(requireAdmin bool) (*model.AppConfig, error) {
 	configMutex.Lock()
 	defer configMutex.Unlock()
 
@@ -112,7 +118,7 @@ func InitConfig() (*model.AppConfig, error) {
 	} else if !os.IsNotExist(err) {
 		return nil, fmt.Errorf("读取配置文件失败: %w", err)
 	}
-	if cfg.AdminUser == "" || cfg.AdminPassHash == "" {
+	if requireAdmin && (cfg.AdminUser == "" || cfg.AdminPassHash == "") {
 		return nil, errors.New("首次启动请在环境配置中设置 ADMIN_USER 和 ADMIN_PASSWORD")
 	}
 	if cfg.JWTSecret == "" {
@@ -122,8 +128,10 @@ func InitConfig() (*model.AppConfig, error) {
 		}
 		cfg.JWTSecret = hex.EncodeToString(key)
 	}
-	if err := saveConfig(*cfg); err != nil {
-		return nil, err
+	if requireAdmin {
+		if err := saveConfig(*cfg); err != nil {
+			return nil, err
+		}
 	}
 
 	globalConfig = cfg
@@ -163,6 +171,27 @@ func UpdateAdmin(username, currentPassword, newUsername, newPassword string) err
 	if username != globalConfig.AdminUser || bcrypt.CompareHashAndPassword([]byte(globalConfig.AdminPassHash), []byte(currentPassword)) != nil {
 		return ErrInvalidCredentials
 	}
+	return setAdmin(newUsername, newPassword)
+}
+
+// ConfigureAdmin is for the local management command while the service is stopped.
+func ConfigureAdmin(username, password string) error {
+	username = strings.TrimSpace(username)
+	if username == "" || len([]rune(username)) > 64 {
+		return errors.New("用户名长度应为 1–64 个字符")
+	}
+	if len(password) < 8 || len(password) > 72 {
+		return errors.New("密码长度应为 8–72 字节")
+	}
+	if _, err := LoadConfig(false); err != nil {
+		return err
+	}
+	configMutex.Lock()
+	defer configMutex.Unlock()
+	return setAdmin(username, password)
+}
+
+func setAdmin(newUsername, newPassword string) error {
 	next := *globalConfig
 	next.AdminUser = newUsername
 	if newPassword != "" {

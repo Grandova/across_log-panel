@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net/http"
@@ -37,10 +38,39 @@ func findDistDir() string {
 }
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "--set-admin" {
+		scanner := bufio.NewScanner(os.Stdin)
+		if !scanner.Scan() {
+			log.Fatal("缺少管理员用户名")
+		}
+		username := scanner.Text()
+		if !scanner.Scan() {
+			log.Fatal("缺少管理员密码")
+		}
+		if err := config.ConfigureAdmin(username, scanner.Text()); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("管理员账号已保存，旧登录已失效。")
+		return
+	}
+
+	if len(os.Args) == 2 && os.Args[1] == "--port" {
+		cfg, err := config.LoadConfig(false)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(cfg.Port)
+		return
+	}
+
 	// 1. Initialize configuration
 	cfg, err := config.InitConfig()
 	if err != nil {
 		log.Fatalf("配置初始化失败: %v", err)
+	}
+
+	if len(os.Args) == 2 && os.Args[1] == "--check-admin" {
+		return
 	}
 
 	// 2. Initialize ClickHouse connection pool
